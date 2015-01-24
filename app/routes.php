@@ -11,7 +11,21 @@
 |
 */
 
-Route::get('/', function()
-{
-	return View::make('hello');
+Route::get('/', 'HomeController@index');
+Route::get('/data', 'HomeController@data');
+Route::any('/test', function() {
+    dd('hello');
 });
+
+Route::post('/upload', 'HomeController@upload');
+
+/* 
+Route::any('/create', function() {
+    $fd = fopen("./frog.jpeg", "rb");
+    $md1 = $client->uploadFile("/Photos/Frog.jpeg",
+            dbx\WriteMode::add(), $fd);
+    fclose($fd);
+    
+    return '123';
+}); 
+*/
