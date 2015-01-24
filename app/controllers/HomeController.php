@@ -20,11 +20,32 @@ class HomeController extends BaseController {
         return View::make('map');
     }
     
+    public function find() {
+        $dbxClient   = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
+        $accountInfo = $dbxClient->getAccountInfo();
+        $data        = $dbxClient->getMetadataWithChildren('/hack');
+        $all         = Dropbox::all(Dropbox::$json);
+        
+        $list = $all->map(function($file) {
+            $lat  = abs($file->latitude - Input::get('lat'));
+            $lng  = abs($file->longitude - Input::get('lng'));
+            
+            if($lat < 2 && $lng < 2) {
+                return $file;
+            }
+        });
+        
+        return Response::json($list);
+    }
+    
     public function data() {
         
         $dbxClient   = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
         $accountInfo = $dbxClient->getAccountInfo();
         $data        = $dbxClient->getMetadataWithChildren('/hack');
+        $db          = Dropbox::where('filename', basename($data["contents"][0]["path"]))->get(Dropbox::$json);
+        
+        dd($db->toJson());
         dd($data);
         
         /*

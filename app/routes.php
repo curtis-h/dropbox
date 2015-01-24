@@ -13,6 +13,7 @@
 
 Route::get('/', 'HomeController@index');
 Route::get('/data', 'HomeController@data');
+Route::any('/find', 'HomeController@find');
 Route::any('/test', function() {
     dd('hello');
 });
