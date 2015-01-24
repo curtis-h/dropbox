@@ -17,6 +17,7 @@ Route::get('/data', 'HomeController@data');
 Route::any('/find', 'HomeController@find');
 Route::any('/auth', 'HomeController@auth');
 Route::get('/create', 'HomeController@create');
+Route::post('/save', 'HomeController@saveFile');
 
 Route::post('/upload', 'HomeController@upload');
 

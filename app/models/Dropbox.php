@@ -3,9 +3,9 @@
 
 class Dropbox extends Eloquent {
     protected $table = 'dropbox';
-    protected $fillable = ['access_token', 'filename', 'latitude', 'longitude'];
+    protected $fillable = ['id', 'access_token', 'filename', 'latitude', 'longitude', 'link'];
     
-    public static $json = ['access_token', 'filename', 'latitude', 'longitude'];
+    public static $json = ['id', 'access_token', 'filename', 'latitude', 'longitude', 'link'];
 
 
 }

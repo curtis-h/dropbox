@@ -95,6 +95,14 @@
           });
         };
 
+        
+        function saveFile(id) {
+            $.post('/save', {id: id}, function(data) {
+                //console.log(data);
+            });
+        }
+        
+        
         function addMarker(ll, box) {
             var marker = new google.maps.Marker({
                 position: ll,
@@ -106,8 +114,7 @@
             var re = /(?:\.([^.]+))?$/;
             var ext = re.exec(box.filename)[1];
             var preview = "";
-
-            var contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+            var contentString = "<div><h4>"+box.filename+" : <button onclick=\"saveFile("+box.id+")\" >Save</button></h4>"+preview+"</div>";
 
             var infowindow = new google.maps.InfoWindow({
                 content: contentString
@@ -116,13 +123,13 @@
             if(ext == 'txt') {
                 $.get(box.link, function(data) {
                     preview = "<p>"+data+"</p>";
-                    contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+                    contentString = "<div><h4>"+box.filename+" : <button onclick=\"saveFile("+box.id+")\" >Save</button></h4>"+preview+"</div>";
                     infowindow.setContent(contentString);
                 });
             }
             else {
                 preview = "<img src=\""+box.link+"\" style=\"width:auto; max-width:400px;\" />";
-                contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+                contentString = "<div><h4>"+box.filename+" : <button onclick=\"saveFile("+box.id+")\" >Save</button></h4>"+preview+"</div>";
                 infowindow.setContent(contentString);
             }
 
@@ -179,7 +186,6 @@
                 };
 
                 directionsService.route(request, function(result, status) {
-                    console.log(result);
                     if (status == google.maps.DirectionsStatus.OK) {
                         directionsDisplay.setDirections(result);
 

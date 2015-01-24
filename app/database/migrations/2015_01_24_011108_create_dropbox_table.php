@@ -20,6 +20,7 @@ class CreateDropboxTable extends Migration {
             $table->string('latitude');
             $table->string('longitude');
             $table->string('filename');
+            $table->string('link');
             
             /*
              * Not sure on the name for this?

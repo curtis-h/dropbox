@@ -6,19 +6,8 @@ class HomeController extends BaseController {
     public function __construct() {
         session_start();
     }
-	/*
-	|--------------------------------------------------------------------------
-	| Default Home Controller
-	|--------------------------------------------------------------------------
-	|
-	| You may wish to use controllers instead of, or in addition to, Closure
-	| based routes. That's great! Here is an example controller method to
-	| get you started. To route to this controller, just add the route:
-	|
-	|	Route::get('/', 'HomeController@showWelcome');
-	|
-	*/
 
+    
     protected function getDbx() {
         $appInfo = dbx\AppInfo::loadFromJsonFile(__DIR__."/../../dropbox_info.json");
         $csrfTokenStore = new dbx\ArrayEntryStore($_SESSION, 'dropbox-auth-csrf-token');
@@ -29,26 +18,12 @@ class HomeController extends BaseController {
     
     public function index() {
         $boxes = Dropbox::all(Dropbox::$json);
-        $dbxClient   = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
-        
-        foreach($boxes as &$box) {
-            $data = $dbxClient->createTemporaryDirectLink("/hack/{$box->filename}");
-            $box->link = $data[0];
-        }
-        
         return View::make('map')->with('boxes', $boxes);
     }
     
     
     public function create() {
-        $boxes     = Dropbox::all(Dropbox::$json);
-        $dbxClient = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
-        
-        foreach($boxes as &$box) {
-            $data = $dbxClient->createTemporaryDirectLink("/hack/{$box->filename}");
-            $box->link = $data[0];
-        }
-        
+        $boxes = Dropbox::all(Dropbox::$json);        
         return View::make('mapCreate')->with('boxes', $boxes);
     }
     
@@ -67,18 +42,16 @@ class HomeController extends BaseController {
         $dbxClient   = new dbx\Client($accessToken, "PHP-Example/1.0");
         $accountInfo = $dbxClient->getAccountInfo();
         
-        dd($accountInfo);
+        Session::put('user', $accountInfo);
+        Session::put('access_token', $accessToken);
+        
+        return Redirect::to('/');
     }
+    
     
     public function find() {
         $boxes = Dropbox::all(Dropbox::$json);
         $dbxClient   = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
-        
-        foreach($boxes as &$box) {
-            $data = $dbxClient->createTemporaryDirectLink("/hack/{$box->filename}");
-            $box->link = $data[0];
-        }
-        
         return Response::json($boxes);
         
         
@@ -99,8 +72,8 @@ class HomeController extends BaseController {
         return Response::json($list);
     }
     
+    
     public function data() {
-        
         $dbxClient   = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
         $accountInfo = $dbxClient->getAccountInfo();
         $data        = $dbxClient->getMetadataWithChildren('/hack');
@@ -111,17 +84,21 @@ class HomeController extends BaseController {
         
     }
     
+    
     public function upload() {
         $file   = Input::file('uploader');
         $name   = $file->getClientOriginalName();
         $path   = $file->getRealPath();
-        $client = new dbx\Client($_ENV['dropbox_at'], "PHP-Example/1.0");
+        $client = new dbx\Client(Session::get('access_token'), "PHP-Example/1.0");
+        
         $fd     = fopen($path, "rb");
         $md1    = $client->uploadFile("/hack/{$name}", dbx\WriteMode::add(), $fd);
         fclose($fd);
         
+        list($link, $trash) = $client->createTemporaryDirectLink("/hack/{$name}");
+        
         // temp until I get client access tokens
-        $token = $_ENV['dropbox_at'];
+        $token = Session::get('access_token');
         $lat   = Input::get('latitude');
         $lng   = Input::get('longitude');
         
@@ -129,10 +106,23 @@ class HomeController extends BaseController {
             'access_token' => $token,
             'filename'     => $name,
             'latitude'     => $lat,
-            'longitude'    => $lng
+            'longitude'    => $lng,
+            'link'         => $link
         ]);
         
         $dropbox->save();
+        
+        return $dropbox->toJson();
+    }
+    
+    public function saveFile() {
+        $file = Dropbox::find(Input::get('id'));
+        $aclient = new dbx\Client($file->access_token, "PHP-Example/1.0");
+        $bclient = new dbx\Client(Session::get('access_token'), "PHP-Example/1.0");
+        $name    = "/hack/{$file->filename}";
+        $ref     = $aclient->createCopyRef($name);
+        $bclient->copyFromCopyRef($ref, $name);
+        
         return "ok";
     }
 
