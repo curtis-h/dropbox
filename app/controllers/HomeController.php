@@ -16,8 +16,36 @@ class HomeController extends BaseController {
 	|
 	*/
 
+    protected function getDbx() {
+        $appInfo = dbx\AppInfo::loadFromJsonFile(__DIR__."/../../dropbox_info.json");
+        $webAuth = new dbx\WebAuthNoRedirect($appInfo, "PHP-Example/1.0");
+        return $webAuth;
+    }
+    
     public function index() {
-        return View::make('map');
+        $boxes = Dropbox::all(Dropbox::$json);
+        return View::make('map')->with('boxes', $boxes);
+    }
+    
+    public function create() {
+        return View::make('mapCreate');
+    }
+    
+    public function login() {
+        $webAuth       = $this->getDbx();
+        $authorizeUrl  = $webAuth->start();
+        $authorizeUrl .= '&redirect_uri=https://dropbox.curtish.me/auth';
+        return Redirect::to($authorizeUrl);
+    }
+    
+    public function auth() {
+        $webAuth = $this->getDbx();
+        $finish  = $webAuth->finish(Input::get('code'));
+        
+        dd($finish);
+        $dbxClient   = new dbx\Client(Input::get('code'), "PHP-Example/1.0");
+        $accountInfo = $dbxClient->getAccountInfo();
+        dd($accountInfo);
     }
     
     public function find() {
@@ -48,16 +76,6 @@ class HomeController extends BaseController {
         dd($db->toJson());
         dd($data);
         
-        /*
-        $appInfo = dbx\AppInfo::loadFromJsonFile(__DIR__."/../../dropbox_info.json");
-        $webAuth = new dbx\WebAuthNoRedirect($appInfo, "PHP-Example/1.0");
-        $authorizeUrl = $webAuth->start();
-        $authorizeUrl .= '&redirect_uri=test';
-        return Redirect::to($authorizeUrl);
-        dd($authorizeUrl);
-        dd($appInfo);
-        return View::make('hello');
-        */
     }
     
     public function upload() {

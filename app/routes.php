@@ -12,11 +12,11 @@
 */
 
 Route::get('/', 'HomeController@index');
+Route::get('/login', 'HomeController@login');
 Route::get('/data', 'HomeController@data');
 Route::any('/find', 'HomeController@find');
-Route::any('/test', function() {
-    dd('hello');
-});
+Route::any('/auth', 'HomeController@auth');
+Route::get('/create', 'HomeController@create');
 
 Route::post('/upload', 'HomeController@upload');
 
