@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Laravel PHP Framework</title>
+	<title>aahhhh</title>
 	<style>
 		@import url(//fonts.googleapis.com/css?family=Lato:700);
 
@@ -53,6 +53,7 @@
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{$_ENV['google_maps_key']}}"></script>
     <script type="text/javascript">
         var globals = {};
+        var markers = [];
 
         function upload() {
             var formdata = new FormData();
@@ -68,16 +69,32 @@
                 console.log(data);
                 
             };
+
+            xhr.addEventListener("load", function() {
+                drawBoxes();
+            }, false);
+            
             
             xhr.send(formdata);
         };
 
-        function drawBoxes(ll, map) {
-            $.post('/find', ll, function(data) {
+        function drawBoxes() {
+            if(markers.length) {
+                for(m in markers) {
+                    if(markers.hasOwnProperty(m)) {
+                        markers[m].setMap(null);
+                    }
+                }
+
+                markers = [];
+            }
+
+            
+            $.post('/find', {}, function(data) {
                 if(data.length) {
                     for(d in data) {
                         if(data.hasOwnProperty(d)) {
-                            addMarker(data[d].latitude, data[d].longitude);
+                            addMarker(data[d]);
                         }
                     }
                 }
@@ -96,12 +113,28 @@
           });
         };
 
-        function addMarker(latitude, longitude) {
-            var ll = {lat: parseFloat(latitude), lng: parseFloat(longitude)};
+        function addMarker(box) {
+            var ll = {
+                lat: parseFloat(box.latitude), 
+                lng: parseFloat(box.longitude)
+            };
             var marker = new google.maps.Marker({
                 position: ll,
                 map: globals.map,
+                icon: "/dropbox_icon.png"
             });
+
+            var contentString = "<div><h4>"+box.filename+"</h4><img src=\""+box.link+"\" style=\"width:400px;\" /></div>";
+
+            var infowindow = new google.maps.InfoWindow({
+                content: contentString
+            });
+
+            google.maps.event.addListener(marker, 'click', function(event) {
+                infowindow.open(globals.map, marker);
+            });
+
+            markers.push(marker);
         }
         
         function makeMap(location) {
@@ -130,7 +163,7 @@
           });
 
 
-          drawBoxes(ll, map);
+          drawBoxes();
         };
       
       google.maps.event.addDomListener(window, 'load', initialize);

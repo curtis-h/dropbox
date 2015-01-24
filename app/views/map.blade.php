@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Laravel PHP Framework</title>
+	<title>errrrm</title>
 	<style>
 		@import url(//fonts.googleapis.com/css?family=Lato:700);
 
@@ -58,7 +58,7 @@
                         var ll = new google.maps.LatLng(boxes[b].latitude, boxes[b].longitude);
                         if(google.maps.geometry.spherical.computeDistanceBetween(coord, ll) < (Math.sqrt(radius) * 100)) {
                             if(typeof(boxes[b].marker) == 'undefined') {
-                                boxes[b].marker = addMarker(ll);
+                                boxes[b].marker = addMarker(ll, boxes[b]);
                             }
                         }
                         else if(typeof(boxes[b].marker) != 'undefined') {
@@ -95,12 +95,42 @@
           });
         };
 
-        function addMarker(ll) {
+        function addMarker(ll, box) {
             var marker = new google.maps.Marker({
                 position: ll,
                 map: globals.map,
                 animation: google.maps.Animation.DROP,
+                icon: "/dropbox_icon.png"
             });
+
+            var re = /(?:\.([^.]+))?$/;
+            var ext = re.exec(box.filename)[1];
+            var preview = "";
+
+            var contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+
+            var infowindow = new google.maps.InfoWindow({
+                content: contentString
+            });
+            
+            if(ext == 'txt') {
+                $.get(box.link, function(data) {
+                    preview = "<p>"+data+"</p>";
+                    contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+                    infowindow.setContent(contentString);
+                });
+            }
+            else {
+                preview = "<img src=\""+box.link+"\" style=\"width:auto; max-width:400px;\" />";
+                contentString = "<div><h4>"+box.filename+"</h4>"+preview+"</div>";
+                infowindow.setContent(contentString);
+            }
+
+
+            google.maps.event.addListener(marker, 'click', function(event) {
+                infowindow.open(globals.map, marker);
+            });
+            
 
             return marker;
         };
@@ -156,12 +186,7 @@
                         travel(result.routes[0].overview_path);
                       }
                 });
-
-              
           });
-
-
-          //drawBoxes(ll, map);
         };
       
       google.maps.event.addDomListener(window, 'load', initialize);
